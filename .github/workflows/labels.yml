@@ -28,6 +28,11 @@ jobs:
     name: Verify (E2E)
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            core.notice('verify_enabled input: ${{ inputs.verify_enabled }}');
+      
       - name: Skip when label missing
         if: ${{ !inputs.verify_enabled }}
         run: echo 'skip'
