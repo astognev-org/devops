@@ -1,11 +1,8 @@
-name: Reusable PR label gates
+name: RC
 
 on:
   workflow_call:
     inputs:
-      verify_enabled:
-        type: boolean
-        required: true
       publish_enabled:
         type: boolean
         required: true
@@ -24,36 +21,8 @@ permissions:
   pull-requests: read
 
 jobs:
-  verify:
-    name: Verify (E2E)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/github-script@v7
-        with:
-          script: |
-            core.notice('verify_enabled input: ${{ inputs.verify_enabled }}');
-      
-      - name: Skip when label missing
-        if: ${{ !inputs.verify_enabled }}
-        run: echo 'skip'
-
-      - uses: actions/checkout@v4
-        if: ${{ inputs.verify_enabled }}
-
-      - uses: actions/setup-node@v4
-        if: ${{ inputs.verify_enabled }}
-        with:
-          node-version: "20"
-          cache: "npm"
-
-      - run: npm ci
-        if: ${{ inputs.verify_enabled }}
-
-      - run: node -e "console.log('E2E OK')"
-        if: ${{ inputs.verify_enabled }}
-
-  publish_rc:
-    name: Publish RC (pre-merge)
+  rc:
+    name: Publish RC
     runs-on: ubuntu-latest
     steps:
       - name: Skip when label missing
@@ -105,7 +74,7 @@ jobs:
             const basePkg = JSON.parse(Buffer.from(baseFile.data.content, 'base64').toString('utf8'));
             if (basePkg.version === head) core.setFailed(`Version must be bumped in PR (base=${basePkg.version}, head=${head})`);
 
-      - name: Create RC prerelease (vX.Y.Z-dev-<shortsha>)
+      - name: Create RC
         if: ${{ inputs.publish_enabled }}
         uses: softprops/action-gh-release@v2
         with:
