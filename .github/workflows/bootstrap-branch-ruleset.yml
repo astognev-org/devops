@@ -1,0 +1,34 @@
+name: Bootstrap branch rules
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  protect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure ruleset for main
+        env:
+          GH_TOKEN: ${{ secrets.GH_ADMIN_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+        run: |
+          set -euo pipefail
+
+          # Create a ruleset for main branch
+          gh api --method POST /repos/$OWNER/$REPO/rulesets \
+            -H "Accept: application/vnd.github+json" \
+            -f name="main-protection" \
+            -f target="branch" \
+            -f enforcement="active" \
+            -f "conditions[ref_name][include][]=refs/heads/main" \
+            -f "rules[][type]=required_linear_history" \
+            -f "rules[][type]=required_status_checks" \
+            -f "rules[][parameters][strict_required_status_checks_policy]=true" \
+            -f "rules[][parameters][required_status_checks][]=check-lockfile" \
+            -f "rules[][parameters][required_status_checks][]=lint" \
+            -f "rules[][parameters][required_status_checks][]=unit-tests" \
+            -f "rules[][parameters][required_status_checks][]=build-ts"
