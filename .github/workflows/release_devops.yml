@@ -37,14 +37,6 @@ jobs:
             const pkg = require('./package.json');
             core.setOutput('version', pkg.version);
 
-      # - name: Configure npm auth for GitHub Packages
-      #   shell: bash
-      #   run: |
-      #     REG="https://npm.pkg.github.com"
-      #     echo "@astognev-org:registry=$REG" >> ~/.npmrc
-      #     echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
-      #     echo "always-auth=true" >> ~/.npmrc
-
       - name: Fail if version already exists in registry
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
