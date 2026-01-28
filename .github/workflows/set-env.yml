@@ -1,4 +1,4 @@
-name: set-env
+name: remote-set-env
 
 on:
   workflow_call:
@@ -11,12 +11,12 @@ permissions:
   contents: read
 
 jobs:
-  set-env:
+  remote-set-env:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     
-    - id: set-env
+    - id: remote-set-env
       run: |
         VERSION="$(node -p "require('./package.json').version")"
         PR_SHA="${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}"
@@ -34,9 +34,9 @@ jobs:
         echo "DOCKER_IMAGE_NAME_RELEASE=${DOCKER_IMAGE_NAME_RELEASE}" >> $GITHUB_OUTPUT
         echo "DOCKER_IMAGE_NAME_LATEST=${DOCKER_IMAGE_NAME_LATEST}" >> $GITHUB_OUTPUT
     outputs:
-      VERSION: ${{ steps.set-env.outputs.VERSION }}
-      PR_SHA: ${{ steps.set-env.outputs.VERSION }}
-      DOCKER_IMAGE_NAME: ${{ steps.set-env.outputs.DOCKER_IMAGE_NAME }}
-      DOCKER_IMAGE_NAME_DEV: ${{ steps.set-env.outputs.DOCKER_IMAGE_NAME_DEV }}
-      DOCKER_IMAGE_NAME_RELEASE: ${{ steps.set-env.outputs.DOCKER_IMAGE_NAME_RELEASE }}
-      DOCKER_IMAGE_NAME_LATEST: ${{ steps.set-env.outputs.DOCKER_IMAGE_NAME_LATEST }}
+      VERSION: ${{ steps.remote-set-env.outputs.VERSION }}
+      PR_SHA: ${{ steps.remote-set-env.outputs.VERSION }}
+      DOCKER_IMAGE_NAME: ${{ steps.remote-set-env.outputs.DOCKER_IMAGE_NAME }}
+      DOCKER_IMAGE_NAME_DEV: ${{ steps.remote-set-env.outputs.DOCKER_IMAGE_NAME_DEV }}
+      DOCKER_IMAGE_NAME_RELEASE: ${{ steps.remote-set-env.outputs.DOCKER_IMAGE_NAME_RELEASE }}
+      DOCKER_IMAGE_NAME_LATEST: ${{ steps.remote-set-env.outputs.DOCKER_IMAGE_NAME_LATEST }}
