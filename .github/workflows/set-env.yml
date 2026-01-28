@@ -9,6 +9,16 @@ on:
     outputs:
       VERSION:
         value: ${{ jobs.set-env.outputs.VERSION }}
+      PR_SHA:
+        value: ${{ jobs.set-env.outputs.PR_SHA }}
+      DOCKER_IMAGE_NAME:
+        value: ${{ jobs.set-env.outputs.DOCKER_IMAGE_NAME }}
+      DOCKER_IMAGE_NAME_DEV:
+        value: ${{ jobs.set-env.outputs.DOCKER_IMAGE_NAME_DEV }}
+      DOCKER_IMAGE_NAME_RELEASE:
+        value: ${{ jobs.set-env.outputs.DOCKER_IMAGE_NAME_RELEASE }}
+      DOCKER_IMAGE_NAME_LATEST:
+        value: ${{ jobs.set-env.outputs.DOCKER_IMAGE_NAME_LATEST }}
 
 permissions:
   contents: read
