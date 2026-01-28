@@ -89,6 +89,15 @@ jobs:
               sha: '${{ inputs.PR_MERGE_COMMIT_SHA }}'
             });
 
+      - name: Login GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Retrieve digest
+        id: digest
+        run: |
+          DIGEST="$(docker buildx imagetools inspect "${{ inputs.DOCKER_IMAGE_NAME_RELEASE }}" --format '{{.Digest}}')"
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+
       - name: Create GitHub Release vX.Y.Z
         uses: softprops/action-gh-release@v2
         with:
@@ -98,7 +107,7 @@ jobs:
           body: |
             Docker image:
             - ${{ inputs.DOCKER_IMAGE_NAME_RELEASE }}
-            - Digest: -
+            - Digest: `${{ steps.digest.outputs.digest }}`
 
             Pull:
             `docker pull ${{ inputs.DOCKER_IMAGE_NAME_RELEASE }}`
