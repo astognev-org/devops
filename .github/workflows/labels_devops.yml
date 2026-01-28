@@ -19,7 +19,7 @@ on:
         type: string
         required: true
       PR_NUMBER:
-        type: number
+        type: string
         required: true
       DOCKER_IMAGE_NAME:
         type: string
