@@ -11,6 +11,8 @@ on:
         value: ${{ jobs.set-env.outputs.VERSION }}
       PR_SHA:
         value: ${{ jobs.set-env.outputs.PR_SHA }}
+      PR_SHORT_SHA:
+        value: ${{ jobs.set-env.outputs.PR_SHORT_SHA }}
       PR_MERGE_COMMIT_SHA:
         value: ${{ jobs.set-env.outputs.PR_MERGE_COMMIT_SHA }}
       PR_BASE_REF:
@@ -39,6 +41,7 @@ jobs:
         run: |
           VERSION="$(node -p "require('./package.json').version")"
           PR_SHA="${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}"
+          PR_SHORT_SHA="$(echo "$PR_SHA" | cut -c1-8)"
           PR_MERGE_COMMIT_SHA="${{ github.event.pull_request.merge_commit_sha }}"
           PR_BASE_REF="${{ github.event.pull_request.base.ref }}"
           PR_NUMBER="${{ github.event.pull_request.number }}"
@@ -49,6 +52,7 @@ jobs:
 
           echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
           echo "PR_SHA=${PR_SHA}" >> $GITHUB_OUTPUT
+          echo "PR_SHORT_SHA=${PR_SHORT_SHA}" >> $GITHUB_OUTPUT
           echo "PR_MERGE_COMMIT_SHA=${PR_MERGE_COMMIT_SHA}" >> $GITHUB_OUTPUT
           echo "PR_BASE_REF=${PR_BASE_REF}" >> $GITHUB_OUTPUT
           echo "PR_NUMBER=${PR_NUMBER}" >> $GITHUB_OUTPUT
@@ -60,6 +64,7 @@ jobs:
     outputs:
       VERSION: ${{ steps.set-env.outputs.VERSION }}
       PR_SHA: ${{ steps.set-env.outputs.PR_SHA }}
+      PR_SHORT_SHA: ${{ steps.set-env.outputs.PR_SHORT_SHA }}
       PR_MERGE_COMMIT_SHA: ${{ steps.set-env.outputs.PR_MERGE_COMMIT_SHA }}
       PR_BASE_REF: ${{ steps.set-env.outputs.PR_BASE_REF }}
       PR_NUMBER: ${{ steps.set-env.outputs.PR_NUMBER }}
