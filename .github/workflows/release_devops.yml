@@ -48,7 +48,6 @@ jobs:
           REG="$(node -p "require('./package.json').publishConfig.registry")"
 
           echo "Checking if $PKG@$VER exists in $REG ..."
-
           if npm view "$PKG" versions --json --registry "$REG" > versions.json 2>/dev/null; then
             node -e '
               const fs = require("fs");
