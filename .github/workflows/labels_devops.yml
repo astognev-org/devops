@@ -80,25 +80,18 @@ jobs:
     if: ${{ inputs.publish_enabled }}
     steps:
       - uses: actions/checkout@v4
-        if: ${{ inputs.publish_enabled }}
 
       - uses: actions/setup-node@v4
-        if: ${{ inputs.publish_enabled }}
         with:
           node-version: "20"
           cache: "npm"
+          registry-url: "https://npm.pkg.github.com"
 
       - run: npm ci
-        if: ${{ inputs.publish_enabled }}
-
       - run: npm test
-        if: ${{ inputs.publish_enabled }}
-
       - run: npm run build
-        if: ${{ inputs.publish_enabled }}
 
       - name: Read head version
-        if: ${{ inputs.publish_enabled }}
         id: headver
         uses: actions/github-script@v7
         with:
@@ -106,8 +99,23 @@ jobs:
             const pkg = require('./package.json');
             core.setOutput('version', pkg.version);
 
+      - name: Fail if version already exists in registry
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PKG_NAME="$(node -p "require('./package.json').name")"
+          VER="${{ steps.headver.outputs.version }}"
+          REG="$(node -p "require('./package.json').publishConfig?.registry || ''")"
+          if [ -z "$REG" ]; then REG="$(npm config get registry)"; fi
+
+          echo "Checking if $PKG_NAME@$VER exists in $REG ..."
+          if npm view "$PKG_NAME@$VER" version --registry "$REG" >/dev/null 2>&1; then
+            echo "ERROR: $PKG_NAME@$VER already exists in $REG"
+            exit 1
+          fi
+          echo "OK: version does not exist yet"
+
       - name: Require semver + bumped in PR
-        if: ${{ inputs.publish_enabled }}
         uses: actions/github-script@v7
         with:
           script: |
@@ -125,7 +133,6 @@ jobs:
             if (basePkg.version === head) core.setFailed(`Version must be bumped in PR (base=${basePkg.version}, head=${head})`);
 
       - name: Create RC
-        if: ${{ inputs.publish_enabled }}
         uses: softprops/action-gh-release@v2
         with:
           prerelease: true

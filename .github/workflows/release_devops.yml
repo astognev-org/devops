@@ -25,7 +25,7 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-          registry-url: "https://npm.pkg.github.com"   # or npmjs registry if needed
+          registry-url: "https://npm.pkg.github.com"
 
       - name: Read version
         id: ver
@@ -34,6 +34,22 @@ jobs:
           script: |
             const pkg = require('./package.json');
             core.setOutput('version', pkg.version);
+
+      - name: Fail if version already exists in registry
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PKG_NAME="$(node -p "require('./package.json').name")"
+          VER="${{ steps.ver.outputs.version }}"
+          REG="$(node -p "require('./package.json').publishConfig?.registry || ''")"
+          if [ -z "$REG" ]; then REG="$(npm config get registry)"; fi
+
+          echo "Checking if $PKG_NAME@$VER exists in $REG ..."
+          if npm view "$PKG_NAME@$VER" version --registry "$REG" >/dev/null 2>&1; then
+            echo "ERROR: $PKG_NAME@$VER already exists in $REG"
+            exit 1
+          fi
+          echo "OK: version does not exist yet"
 
       - name: Create tag vX.Y.Z
         uses: actions/github-script@v7
