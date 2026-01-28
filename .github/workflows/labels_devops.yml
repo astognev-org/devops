@@ -29,20 +29,47 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ inputs.verify_enabled }}
     steps:
-      - uses: actions/checkout@v4
-        if: ${{ inputs.verify_enabled }}
+      - name: Checkout PR head (to get E2E script)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.head_sha }}
 
-      - uses: actions/setup-node@v4
-        if: ${{ inputs.verify_enabled }}
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull image
+        run: docker pull ${{ inputs.image_ref }}
+
+      - name: Run container
+        run: |
+          docker run -d --rm --name ts-app-e2e -p 8080:8080 ${{ inputs.image_ref }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
 
-      - run: npm ci
-        if: ${{ inputs.verify_enabled }}
+      - name: Install deps
+        run: npm ci
 
-      - run: node -e "console.log('E2E OK')"
-        if: ${{ inputs.verify_enabled }}
+      - name: Run E2E (validate response)
+        env:
+          BASE_URL: http://127.0.0.1:8080
+          EXPECTED_BODY: "Hi from TypeScript!"
+        run: node e2e/response.e2e.mjs
+
+      - name: Container logs on failure
+        if: failure()
+        run: docker logs ts-app-e2e
+
+      - name: Cleanup
+        if: always()
+        run: docker rm -f ts-app-e2e || true
 
   publish_rc:
     name: Publish RC
