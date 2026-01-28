@@ -1,7 +1,14 @@
 name: Bootstrap branch rules
 
 on:
-  workflow_dispatch:
+  workflow_call:
+    inputs:
+      branch:
+        type: string
+        default: main
+    secrets:
+      GH_ADMIN_TOKEN:
+        required: true
 
 permissions:
   contents: read
@@ -24,7 +31,7 @@ jobs:
             -f name="main-protection" \
             -f target="branch" \
             -f enforcement="active" \
-            -f "conditions[ref_name][include][]=refs/heads/main" \
+            -f "conditions[ref_name][include][]=refs/heads/${{ inputs.branch }}" \
             -f "rules[][type]=required_linear_history" \
             -f "rules[][type]=required_status_checks" \
             -f "rules[][parameters][strict_required_status_checks_policy]=true" \
