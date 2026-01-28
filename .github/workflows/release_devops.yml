@@ -42,10 +42,15 @@ jobs:
         run: |
           PKG="$(node -p "require('./package.json').name")"
           VER="$(node -p "require('./package.json').version")"
+          REG="$(node -p "require('./package.json').publishConfig?.registry || ''")"
 
-          echo "Checking if $PKG@$VER exists..."
-          if npm view "$PKG@$VER" version >/dev/null 2>&1; then
-            echo "ERROR: $PKG@$VER already exists in registry"
+          if [ -z "$REG" ]; then
+            echo "ERROR: publishConfig.registry is not set in package.json"
+            exit 1
+          fi
+          echo "Checking if $PKG@$VER exists in $REG ..."
+          if npm view "$PKG@$VER" version --registry "$REG" >/dev/null 2>&1; then
+            echo "ERROR: $PKG@$VER already exists"
             exit 1
           fi
           echo "OK: version does not exist yet"
