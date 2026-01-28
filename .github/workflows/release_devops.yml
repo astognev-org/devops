@@ -48,16 +48,19 @@ jobs:
           REG="$(node -p "require('./package.json').publishConfig.registry")"
 
           echo "Checking if $PKG@$VER exists in $REG ..."
-          VERSIONS="$(npm view "$PKG" versions --json --registry "$REG" 2>/dev/null || true)"
-          echo "$VERSIONS" | node -e '
-            const v = process.env.VER;
-            const s = require("fs").readFileSync(0, "utf8").trim();
-            if (!s) process.exit(0);                 // package not found => version doesn't exist
-            const arr = JSON.parse(s);
-            const versions = Array.isArray(arr) ? arr : [arr];
-            process.exit(versions.includes(v) ? 1 : 0);
-          ' VER="$VER"
-          echo "OK: version does not exist yet"
+
+          if npm view "$PKG" versions --json --registry "$REG" > versions.json 2>/dev/null; then
+            node -e '
+              const fs = require("fs");
+              const versions = JSON.parse(fs.readFileSync("versions.json","utf8") || "[]");
+              const arr = Array.isArray(versions) ? versions : [versions];
+              process.exit(arr.includes(process.env.VER) ? 1 : 0);
+            ' VER="$VER" || { echo "ERROR: $PKG@$VER already exists"; exit 1; }
+
+            echo "OK: version does not exist yet"
+          else
+            echo "OK: package not found yet"
+          fi
 
       - name: Create tag vX.Y.Z
         uses: actions/github-script@v7
