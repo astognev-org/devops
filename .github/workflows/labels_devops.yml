@@ -92,7 +92,10 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ inputs.publish_enabled }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.PR_SHA }}
 
       - uses: actions/setup-node@v4
         with:
@@ -168,6 +171,31 @@ jobs:
             const basePkg = JSON.parse(Buffer.from(baseFile.data.content, 'base64').toString('utf8'));
             if (basePkg.version === head) core.setFailed(`Version must be bumped in PR (base=${basePkg.version}, head=${head})`);
 
+      - name: Stamp RC version locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm version --no-git-tag-version "${{ inputs.VERSION }}-dev-${{ inputs.PR_SHORT_SHA }}"
+
+      - name: Pack npm artifact (.tgz)
+        id: pack
+        shell: bash
+        run: |
+          set -euo pipefail
+          # build already ran, but harmless if build is idempotent
+          npm run build
+          TGZ="$(npm pack --silent)"
+          echo "tgz=$TGZ" >> "$GITHUB_OUTPUT"
+          echo "Packed: $TGZ"
+          ls -la "$TGZ"
+
+      - name: Upload npm package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-package-${{ inputs.VERSION }}-dev-${{ inputs.PR_SHORT_SHA }}
+          path: ${{ steps.pack.outputs.tgz }}
+          if-no-files-found: error
+
       - name: Create RC
         uses: softprops/action-gh-release@v2
         with:
@@ -175,3 +203,5 @@ jobs:
           tag_name: ${{ inputs.VERSION }}-dev-${{ inputs.PR_SHORT_SHA }}
           name: ${{ inputs.VERSION }}-dev-${{ inputs.PR_SHORT_SHA }}
           generate_release_notes: true
+          files: |
+            ${{ steps.pack.outputs.tgz }}
