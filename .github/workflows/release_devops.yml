@@ -44,7 +44,6 @@ jobs:
         with:
           script: |
             const { execSync } = require("node:child_process");
-
             const pkg = require("./package.json");
             const name = pkg.name;
             const ver = pkg.version;
@@ -58,7 +57,6 @@ jobs:
             core.info(`Checking if ${name}@${ver} exists in ${reg} ...`);
 
             try {
-              // Ask registry for the list of versions. If package doesn't exist, npm will error.
               const out = execSync(`npm view "${name}" versions --json --registry "${reg}"`, {
                 stdio: ["ignore", "pipe", "pipe"],
                 env: { ...process.env, NODE_AUTH_TOKEN: process.env.NODE_AUTH_TOKEN },
@@ -71,10 +69,8 @@ jobs:
                 core.setFailed(`Version already exists: ${name}@${ver}`);
                 return;
               }
-
               core.info("OK: version does not exist yet");
             } catch (e) {
-              // If package doesn't exist yet, that's OK (version doesn't exist).
               core.info("OK: package/version not found in registry yet");
             }
 
