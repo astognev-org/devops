@@ -29,10 +29,6 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ inputs.verify_enabled }}
     steps:
-      # - name: Skip when label missing
-      #   if: ${{ !inputs.verify_enabled }}
-      #   run: echo 'skip'
-
       - uses: actions/checkout@v4
         if: ${{ inputs.verify_enabled }}
 
@@ -53,10 +49,6 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ inputs.publish_enabled }}
     steps:
-      - name: Skip when label missing
-        if: ${{ !inputs.publish_enabled }}
-        run: echo 'skip'
-
       - uses: actions/checkout@v4
         if: ${{ inputs.publish_enabled }}
 
