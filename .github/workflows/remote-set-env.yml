@@ -33,6 +33,8 @@ jobs:
         echo "DOCKER_IMAGE_NAME_DEV=${DOCKER_IMAGE_NAME_DEV}" >> $GITHUB_OUTPUT
         echo "DOCKER_IMAGE_NAME_RELEASE=${DOCKER_IMAGE_NAME_RELEASE}" >> $GITHUB_OUTPUT
         echo "DOCKER_IMAGE_NAME_LATEST=${DOCKER_IMAGE_NAME_LATEST}" >> $GITHUB_OUTPUT
+
+        echo "MY_VARIABLE=my_value" >> $GITHUB_ENV
     outputs:
       VERSION: ${{ steps.remote-set-env.outputs.VERSION }}
       PR_SHA: ${{ steps.remote-set-env.outputs.VERSION }}
