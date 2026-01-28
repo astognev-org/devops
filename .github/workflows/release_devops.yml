@@ -37,6 +37,13 @@ jobs:
             const pkg = require('./package.json');
             core.setOutput('version', pkg.version);
 
+      - name: Debug registry resolution
+        run: |
+          echo "npm default registry: $(npm config get registry)"
+          npm config get @astognev-org:registry || true
+          node -p "require('./package.json').name"
+          node -p "require('./package.json').publishConfig?.registry"
+
       - name: Fail if version already exists in registry
         shell: bash
         run: |
