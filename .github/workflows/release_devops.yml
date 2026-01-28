@@ -12,7 +12,7 @@ on:
       REGISTRY_URL:
         type: string
         required: true
-      GITHUB_ORG:
+      ORGANIZATION:
         type: string
         required: true
 
@@ -35,7 +35,7 @@ jobs:
           node-version: "20"
           cache: "npm"
           registry-url: "${{ inputs.REGISTRY_URL }}"
-          scope: "@${{ inputs.GITHUB_ORG }}"
+          scope: "@${{ inputs.ORGANIZATION }}"
           always-auth: true
 
       - name: Read version
