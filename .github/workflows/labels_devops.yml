@@ -15,6 +15,9 @@ on:
       PR_BASE_REF:
         type: string
         required: true
+      PR_SHA:
+        type: string
+        required: true
       PR_SHORT_SHA:
         type: string
         required: true
