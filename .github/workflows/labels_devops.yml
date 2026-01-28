@@ -21,7 +21,7 @@ on:
       PR_NUMBER:
         type: string
         required: true
-      DOCKER_IMAGE_NAME:
+      DOCKER_IMAGE_NAME_DEV:
         type: string
         required: true
 
@@ -49,11 +49,11 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Pull image
-        run: docker pull ${{ inputs.DOCKER_IMAGE_NAME }}
+        run: docker pull ${{ inputs.DOCKER_IMAGE_NAME_DEV }}
 
       - name: Run container
         run: |
-          docker run -d --rm --name ts-app-e2e -p 8080:8080 ${{ inputs.DOCKER_IMAGE_NAME }}
+          docker run -d --rm --name ts-app-e2e -p 8080:8080 ${{ inputs.DOCKER_IMAGE_NAME_DEV }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
