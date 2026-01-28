@@ -6,6 +6,9 @@ on:
       PR_MERGE_COMMIT_SHA:
         type: string
         required: true
+      DOCKER_IMAGE_NAME_RELEASE:
+        type: string
+        required: true
 
 permissions:
   contents: write
@@ -92,6 +95,13 @@ jobs:
           tag_name: v${{ steps.ver.outputs.version }}
           name: v${{ steps.ver.outputs.version }}
           generate_release_notes: true
+          body: |
+            Docker image:
+            - ${{ inputs.DOCKER_IMAGE_NAME_RELEASE }}
+            - Digest: -
+
+            Pull:
+            `docker pull ${{ inputs.DOCKER_IMAGE_NAME_RELEASE }}`
 
       - name: Publish package
         env:
