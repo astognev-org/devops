@@ -37,29 +37,26 @@ jobs:
             const pkg = require('./package.json');
             core.setOutput('version', pkg.version);
 
-      - name: Debug registry resolution
-        run: |
-          echo "npm default registry: $(npm config get registry)"
-          npm config get @astognev-org:registry || true
-          node -p "require('./package.json').name"
-          node -p "require('./package.json').publishConfig?.registry"
-
       - name: Fail if version already exists in registry
         shell: bash
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
           PKG="$(node -p "require('./package.json').name")"
           VER="$(node -p "require('./package.json').version")"
-          REG="$(node -p "require('./package.json').publishConfig?.registry || ''")"
+          REG="$(node -p "require('./package.json').publishConfig.registry")"
 
-          if [ -z "$REG" ]; then
-            echo "ERROR: publishConfig.registry is not set in package.json"
-            exit 1
-          fi
           echo "Checking if $PKG@$VER exists in $REG ..."
-          if npm view "$PKG@$VER" version --registry "$REG" >/dev/null 2>&1; then
-            echo "ERROR: $PKG@$VER already exists"
-            exit 1
-          fi
+          VERSIONS="$(npm view "$PKG" versions --json --registry "$REG" 2>/dev/null || true)"
+          echo "$VERSIONS" | node -e '
+            const v = process.env.VER;
+            const s = require("fs").readFileSync(0, "utf8").trim();
+            if (!s) process.exit(0);                 // package not found => version doesn't exist
+            const arr = JSON.parse(s);
+            const versions = Array.isArray(arr) ? arr : [arr];
+            process.exit(versions.includes(v) ? 1 : 0);
+          ' VER="$VER"
           echo "OK: version does not exist yet"
 
       - name: Create tag vX.Y.Z
