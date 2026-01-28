@@ -19,7 +19,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - run: |
+    - name: remote-set-env
+      run: |
         VERSION="$(node -p "require('./package.json').version")"
         PR_SHA="${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}"
         IMAGE_TAG=""
