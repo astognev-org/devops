@@ -64,7 +64,7 @@ jobs:
         env:
           BASE_URL: http://127.0.0.1:8080
           EXPECTED_BODY: "Hi from TypeScript!"
-        run: node e2e/response.e2e.mjs
+        run: node tests/response.e2e.mjs
 
       - name: Container logs on failure
         if: failure()
