@@ -45,8 +45,8 @@ jobs:
           PR_MERGE_COMMIT_SHA="${{ github.event.pull_request.merge_commit_sha }}"
           PR_BASE_REF="${{ github.event.pull_request.base.ref }}"
           PR_NUMBER="${{ github.event.pull_request.number }}"
-          DOCKER_IMAGE_NAME="${{ inputs.GHCR_DOCKER_REGISTRY_PATH }}:${VERSION}-${PR_SHA}"
-          DOCKER_IMAGE_NAME_DEV="${{ inputs.GHCR_DOCKER_REGISTRY_PATH }}:${VERSION}-dev-${PR_SHA}"
+          DOCKER_IMAGE_NAME="${{ inputs.GHCR_DOCKER_REGISTRY_PATH }}:${VERSION}-${PR_SHORT_SHA}"
+          DOCKER_IMAGE_NAME_DEV="${{ inputs.GHCR_DOCKER_REGISTRY_PATH }}:${VERSION}-dev-${PR_SHORT_SHA}"
           DOCKER_IMAGE_NAME_RELEASE="${{ inputs.GHCR_DOCKER_REGISTRY_PATH }}:${VERSION}"
           DOCKER_IMAGE_NAME_LATEST="${{ inputs.GHCR_DOCKER_REGISTRY_PATH }}:latest" 
 
