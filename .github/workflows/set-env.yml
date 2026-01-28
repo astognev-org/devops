@@ -1,4 +1,4 @@
-name: remote-set-env
+name: set-env
 
 on:
   workflow_call:
@@ -8,21 +8,18 @@ on:
         required: true
     outputs:
       VERSION:
-        value: ${{ jobs.remote-set-env.outputs.VERSION }}
-      firstword:
-        description: "The first output string"
-        value: ${{ jobs.example_job.outputs.output1 }}
+        value: ${{ jobs.set-env.outputs.VERSION }}
 
 permissions:
   contents: read
 
 jobs:
-  remote-set-env:
+  set-env:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
     
-      - id: remote-set-env
+      - id: set-env
         run: |
           VERSION="$(node -p "require('./package.json').version")"
           PR_SHA="${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}"
@@ -42,14 +39,10 @@ jobs:
 
           echo "MY_VARIABLE=my_value" >> $GITHUB_ENV
 
-      - id: step1
-        run: echo "firstword=hello" >> $GITHUB_OUTPUT
-
     outputs:
-      VERSION: ${{ steps.remote-set-env.outputs.VERSION }}
-      PR_SHA: ${{ steps.remote-set-env.outputs.VERSION }}
-      DOCKER_IMAGE_NAME: ${{ steps.remote-set-env.outputs.DOCKER_IMAGE_NAME }}
-      DOCKER_IMAGE_NAME_DEV: ${{ steps.remote-set-env.outputs.DOCKER_IMAGE_NAME_DEV }}
-      DOCKER_IMAGE_NAME_RELEASE: ${{ steps.remote-set-env.outputs.DOCKER_IMAGE_NAME_RELEASE }}
-      DOCKER_IMAGE_NAME_LATEST: ${{ steps.remote-set-env.outputs.DOCKER_IMAGE_NAME_LATEST }}
-      output1: ${{ steps.step1.outputs.firstword }}
+      VERSION: ${{ steps.set-env.outputs.VERSION }}
+      PR_SHA: ${{ steps.set-env.outputs.VERSION }}
+      DOCKER_IMAGE_NAME: ${{ steps.set-env.outputs.DOCKER_IMAGE_NAME }}
+      DOCKER_IMAGE_NAME_DEV: ${{ steps.set-env.outputs.DOCKER_IMAGE_NAME_DEV }}
+      DOCKER_IMAGE_NAME_RELEASE: ${{ steps.set-env.outputs.DOCKER_IMAGE_NAME_RELEASE }}
+      DOCKER_IMAGE_NAME_LATEST: ${{ steps.set-env.outputs.DOCKER_IMAGE_NAME_LATEST }}
