@@ -9,16 +9,19 @@ on:
       publish_enabled:
         type: boolean
         required: true
-      base_ref:
+      VERSION:
         type: string
         required: true
-      head_sha:
+      PR_BASE_REF:
         type: string
         required: true
-      pr_number:
+      PR_SHA:
+        type: string
+        required: true
+      PR_NUMBER:
         type: number
         required: true
-      image_ref:
+      DOCKER_IMAGE_NAME:
         type: string
         required: true
 
@@ -36,7 +39,7 @@ jobs:
       - name: Checkout PR head (to get E2E script)
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.head_sha }}
+          ref: ${{ inputs.PR_SHA }}
 
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -46,11 +49,11 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Pull image
-        run: docker pull ${{ inputs.image_ref }}
+        run: docker pull ${{ inputs.DOCKER_IMAGE_NAME }}
 
       - name: Run container
         run: |
-          docker run -d --rm --name ts-app-e2e -p 8080:8080 ${{ inputs.image_ref }}
+          docker run -d --rm --name ts-app-e2e -p 8080:8080 ${{ inputs.DOCKER_IMAGE_NAME }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -151,7 +154,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               path: 'package.json',
-              ref: '${{ inputs.base_ref }}'
+              ref: '${{ inputs.PR_BASE_REF }}'
             });
             const basePkg = JSON.parse(Buffer.from(baseFile.data.content, 'base64').toString('utf8'));
             if (basePkg.version === head) core.setFailed(`Version must be bumped in PR (base=${basePkg.version}, head=${head})`);
@@ -160,6 +163,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           prerelease: true
-          tag_name: v${{ steps.headver.outputs.version }}-dev-${{ inputs.head_sha }}
-          name: v${{ steps.headver.outputs.version }}-dev-${{ inputs.head_sha }}
+          tag_name: ${{ inputs.VERSION }}-dev-${{ inputs.PR_SHA }}
+          name: ${{ inputs.VERSION }}-dev-${{ inputs.PR_SHA }}
           generate_release_notes: true
