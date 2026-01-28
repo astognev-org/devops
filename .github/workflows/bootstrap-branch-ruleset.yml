@@ -6,36 +6,64 @@ on:
       branch:
         type: string
         default: main
+      checks:
+        description: 'JSON array of required check names, e.g. ["lint","unit-tests"]'
+        type: string
+        required: true
     secrets:
       GH_ADMIN_TOKEN:
         required: true
-
-permissions:
-  contents: read
 
 jobs:
   protect:
     runs-on: ubuntu-latest
     steps:
-      - name: Configure ruleset for main
+      - name: Create/Update ruleset
         env:
           GH_TOKEN: ${{ secrets.GH_ADMIN_TOKEN }}
           OWNER: ${{ github.repository_owner }}
           REPO: ${{ github.event.repository.name }}
+          BRANCH: ${{ inputs.branch }}
+          CHECKS_JSON: ${{ inputs.checks }}
         run: |
           set -euo pipefail
 
-          # Create a ruleset for main branch
-          gh api --method POST /repos/$OWNER/$REPO/rulesets \
-            -H "Accept: application/vnd.github+json" \
-            -f name="main-protection" \
-            -f target="branch" \
-            -f enforcement="active" \
-            -f "conditions[ref_name][include][]=refs/heads/${{ inputs.branch }}" \
-            -f "rules[][type]=required_linear_history" \
-            -f "rules[][type]=required_status_checks" \
-            -f "rules[][parameters][strict_required_status_checks_policy]=true" \
-            -f "rules[][parameters][required_status_checks][]=check-lockfile" \
-            -f "rules[][parameters][required_status_checks][]=lint" \
-            -f "rules[][parameters][required_status_checks][]=unit-tests" \
-            -f "rules[][parameters][required_status_checks][]=build-ts"
+          RULESET_NAME="main-protection"
+
+          RULESET_ID="$(gh api -H "Accept: application/vnd.github+json" \
+            /repos/$OWNER/$REPO/rulesets \
+            --jq ".[] | select(.name==\"$RULESET_NAME\") | .id" | head -n 1 || true)"
+
+          payload="$(jq -n \
+            --arg name "$RULESET_NAME" \
+            --arg branch "refs/heads/$BRANCH" \
+            --argjson checks "$CHECKS_JSON" \
+            '{
+              name: $name,
+              target: "branch",
+              enforcement: "active",
+              conditions: { ref_name: { include: [$branch], exclude: [] } },
+              rules: [
+                { type: "required_linear_history" },
+                {
+                  type: "required_status_checks",
+                  parameters: {
+                    strict_required_status_checks_policy: true,
+                    required_status_checks: ($checks | map({context: .}))
+                  }
+                }
+              ]
+            }'
+          )"
+
+          if [[ -n "${RULESET_ID:-}" ]]; then
+            echo "Updating ruleset id=$RULESET_ID"
+            gh api --method PUT -H "Accept: application/vnd.github+json" \
+              /repos/$OWNER/$REPO/rulesets/$RULESET_ID \
+              --input <(echo "$payload")
+          else
+            echo "Creating ruleset"
+            gh api --method POST -H "Accept: application/vnd.github+json" \
+              /repos/$OWNER/$REPO/rulesets \
+              --input <(echo "$payload")
+          fi
