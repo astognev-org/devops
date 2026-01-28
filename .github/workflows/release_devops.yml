@@ -26,6 +26,8 @@ jobs:
           node-version: "20"
           cache: "npm"
           registry-url: "https://npm.pkg.github.com"
+          scope: "@astognev-org"
+          always-auth: true
 
       - name: Read version
         id: ver
