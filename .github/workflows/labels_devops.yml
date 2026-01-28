@@ -18,6 +18,9 @@ on:
       pr_number:
         type: number
         required: true
+      image_ref:
+        type: string
+        required: true
 
 permissions:
   contents: write
