@@ -9,6 +9,9 @@ on:
     outputs:
       VERSION:
         value: ${{ jobs.remote-set-env.outputs.VERSION }}
+      firstword:
+        description: "The first output string"
+        value: ${{ jobs.example_job.outputs.output1 }}
 
 permissions:
   contents: read
@@ -17,27 +20,31 @@ jobs:
   remote-set-env:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
     
-    - name: remote-set-env
-      run: |
-        VERSION="$(node -p "require('./package.json').version")"
-        PR_SHA="${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}"
-        IMAGE_TAG=""
-        IMAGE_TAG_DEV=""
-        DOCKER_IMAGE_NAME="${{ inputs.GHCR_DOCKER_REGISTRY_PATH }}:${VERSION}-${SHA}"
-        DOCKER_IMAGE_NAME_DEV="${{ inputs.GHCR_DOCKER_REGISTRY_PATH }}:${VERSION}-dev-${SHA}"
-        DOCKER_IMAGE_NAME_RELEASE="${{ inputs.GHCR_DOCKER_REGISTRY_PATH }}:${VERSION}"
-        DOCKER_IMAGE_NAME_LATEST="${{ inputs.GHCR_DOCKER_REGISTRY_PATH }}:latest" 
+      - id: remote-set-env
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          PR_SHA="${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}"
+          IMAGE_TAG=""
+          IMAGE_TAG_DEV=""
+          DOCKER_IMAGE_NAME="${{ inputs.GHCR_DOCKER_REGISTRY_PATH }}:${VERSION}-${SHA}"
+          DOCKER_IMAGE_NAME_DEV="${{ inputs.GHCR_DOCKER_REGISTRY_PATH }}:${VERSION}-dev-${SHA}"
+          DOCKER_IMAGE_NAME_RELEASE="${{ inputs.GHCR_DOCKER_REGISTRY_PATH }}:${VERSION}"
+          DOCKER_IMAGE_NAME_LATEST="${{ inputs.GHCR_DOCKER_REGISTRY_PATH }}:latest" 
 
-        echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
-        echo "PR_SHA=${PR_SHA}" >> $GITHUB_OUTPUT
-        echo "DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME}" >> $GITHUB_OUTPUT
-        echo "DOCKER_IMAGE_NAME_DEV=${DOCKER_IMAGE_NAME_DEV}" >> $GITHUB_OUTPUT
-        echo "DOCKER_IMAGE_NAME_RELEASE=${DOCKER_IMAGE_NAME_RELEASE}" >> $GITHUB_OUTPUT
-        echo "DOCKER_IMAGE_NAME_LATEST=${DOCKER_IMAGE_NAME_LATEST}" >> $GITHUB_OUTPUT
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          echo "PR_SHA=${PR_SHA}" >> $GITHUB_OUTPUT
+          echo "DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME}" >> $GITHUB_OUTPUT
+          echo "DOCKER_IMAGE_NAME_DEV=${DOCKER_IMAGE_NAME_DEV}" >> $GITHUB_OUTPUT
+          echo "DOCKER_IMAGE_NAME_RELEASE=${DOCKER_IMAGE_NAME_RELEASE}" >> $GITHUB_OUTPUT
+          echo "DOCKER_IMAGE_NAME_LATEST=${DOCKER_IMAGE_NAME_LATEST}" >> $GITHUB_OUTPUT
 
-        echo "MY_VARIABLE=my_value" >> $GITHUB_ENV
+          echo "MY_VARIABLE=my_value" >> $GITHUB_ENV
+
+      - id: step1
+        run: echo "firstword=hello" >> $GITHUB_OUTPUT
+
     outputs:
       VERSION: ${{ steps.remote-set-env.outputs.VERSION }}
       PR_SHA: ${{ steps.remote-set-env.outputs.VERSION }}
@@ -45,3 +52,4 @@ jobs:
       DOCKER_IMAGE_NAME_DEV: ${{ steps.remote-set-env.outputs.DOCKER_IMAGE_NAME_DEV }}
       DOCKER_IMAGE_NAME_RELEASE: ${{ steps.remote-set-env.outputs.DOCKER_IMAGE_NAME_RELEASE }}
       DOCKER_IMAGE_NAME_LATEST: ${{ steps.remote-set-env.outputs.DOCKER_IMAGE_NAME_LATEST }}
+      output1: ${{ steps.step1.outputs.firstword }}
