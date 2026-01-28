@@ -6,6 +6,9 @@ on:
       GHCR_DOCKER_REGISTRY_PATH:
         type: string
         required: true
+    outputs:
+      VERSION:
+        value: ${{ jobs.remote-set-env.outputs.VERSION }}
 
 permissions:
   contents: read
@@ -16,8 +19,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - id: remote-set-env
-      run: |
+    - run: |
         VERSION="$(node -p "require('./package.json').version")"
         PR_SHA="${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}"
         IMAGE_TAG=""
