@@ -27,6 +27,12 @@ on:
       DOCKER_IMAGE_NAME_DEV:
         type: string
         required: true
+      REGISTRY_URL:
+        type: string
+        required: true
+      GITHUB_ORG:
+        type: string
+        required: true
 
 permissions:
   contents: write
@@ -92,8 +98,8 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-          registry-url: "https://npm.pkg.github.com"
-          scope: "@astognev-org"
+          registry-url: "${{ inputs.REGISTRY_URL }}"
+          scope: "@${{ inputs.GITHUB_ORG }}"
           always-auth: true
 
       - run: npm ci
