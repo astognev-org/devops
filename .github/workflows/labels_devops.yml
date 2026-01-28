@@ -103,28 +103,45 @@ jobs:
             core.setOutput('version', pkg.version);
 
       - name: Fail if version already exists in registry
-        shell: bash
+        uses: actions/github-script@v7
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          PKG="$(node -p "require('./package.json').name")"
-          VER="$(node -p "require('./package.json').version")"
-          REG="$(node -p "require('./package.json').publishConfig.registry")"
+        with:
+          script: |
+            const { execSync } = require("node:child_process");
 
-          echo "Checking if $PKG@$VER exists in $REG ..."
-          if npm view "$PKG" versions --json --registry "$REG" > versions.json 2>/dev/null; then
-            node -e '
-              const fs = require("fs");
-              const versions = JSON.parse(fs.readFileSync("versions.json","utf8") || "[]");
-              const arr = Array.isArray(versions) ? versions : [versions];
-              process.exit(arr.includes(process.env.VER) ? 1 : 0);
-            ' VER="$VER" || { echo "ERROR: $PKG@$VER already exists"; exit 1; }
+            const pkg = require("./package.json");
+            const name = pkg.name;
+            const ver = pkg.version;
+            const reg = pkg.publishConfig?.registry;
 
-            echo "OK: version does not exist yet"
-          else
-            echo "OK: package not found yet"
-          fi
+            if (!reg) {
+              core.setFailed("publishConfig.registry is not set in package.json");
+              return;
+            }
+
+            core.info(`Checking if ${name}@${ver} exists in ${reg} ...`);
+
+            try {
+              // Ask registry for the list of versions. If package doesn't exist, npm will error.
+              const out = execSync(`npm view "${name}" versions --json --registry "${reg}"`, {
+                stdio: ["ignore", "pipe", "pipe"],
+                env: { ...process.env, NODE_AUTH_TOKEN: process.env.NODE_AUTH_TOKEN },
+              }).toString().trim();
+
+              const parsed = JSON.parse(out || "[]");
+              const versions = Array.isArray(parsed) ? parsed : [parsed];
+
+              if (versions.includes(ver)) {
+                core.setFailed(`Version already exists: ${name}@${ver}`);
+                return;
+              }
+
+              core.info("OK: version does not exist yet");
+            } catch (e) {
+              // If package doesn't exist yet, that's OK (version doesn't exist).
+              core.info("OK: package/version not found in registry yet");
+            }
 
       - name: Require semver + bumped in PR
         uses: actions/github-script@v7
