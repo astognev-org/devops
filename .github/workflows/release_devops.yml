@@ -40,18 +40,36 @@ jobs:
       - name: Fail if version already exists in registry
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
         run: |
+          set -euo pipefail
+
           PKG_NAME="$(node -p "require('./package.json').name")"
-          VER="${{ steps.ver.outputs.version }}"
+          VER="$(node -p "require('./package.json').version")"
           REG="$(node -p "require('./package.json').publishConfig?.registry || ''")"
           if [ -z "$REG" ]; then REG="$(npm config get registry)"; fi
 
           echo "Checking if $PKG_NAME@$VER exists in $REG ..."
-          if npm view "$PKG_NAME@$VER" version --registry "$REG" >/dev/null 2>&1; then
-            echo "ERROR: $PKG_NAME@$VER already exists in $REG"
+
+          set +e
+          OUT="$(npm view "$PKG_NAME@$VER" version --registry "$REG" 2>&1)"
+          RC=$?
+          set -e
+
+          if [ $RC -eq 0 ]; then
+            echo "ERROR: $PKG_NAME@$VER already exists"
             exit 1
           fi
-          echo "OK: version does not exist yet"
+
+          # npm uses E404 for "not found". Anything else is likely auth/config and should fail.
+          if echo "$OUT" | grep -qE 'E404|404 Not Found|code E404'; then
+            echo "OK: version does not exist yet"
+            exit 0
+          fi
+
+          echo "ERROR: Could not verify version existence (likely auth/registry issue)."
+          echo "$OUT"
+          exit 1
 
       - name: Create tag vX.Y.Z
         uses: actions/github-script@v7
