@@ -2,9 +2,7 @@
 
 This is set of automation scripts and configs for devops purposes. It contains:
 - GitHub workflows
-- Deployment scripts
-- Automation scripts
-- ...
+- Other devops stuff like automations and deployment scripts
 
 ------------------------------------------------------------------------
 
@@ -12,11 +10,13 @@ This is set of automation scripts and configs for devops purposes. It contains:
 
 All GitHub workflow files are located in .github\workflows folder.
 
+-   **set-env.yml** - essential workflow providing apportunity to reuse all the variables across whole CI/CD
 -   **labels_devops.yml** - workflow intended to cover Label-Driven aproach with following labels:
     - "verify" - perform E2E tests against built application/docker image
     - "publish" - publish Release Candidate
 -   **release_devops.yml** - workflow creates tag and release with appropriate notes
--   **set-env.yml** - essential workflow providing apportunity to reuse all the variables across whole CI/CD
+-   **bootstrap-branch-ruleset.yml** - workflow which could be reused for branch protection ruleset 
+    creation (especilly for enforcing up-to-date branch with main and linear history)
 
 
 ------------------------------------------------------------------------
@@ -26,9 +26,7 @@ All GitHub workflow files are located in .github\workflows folder.
     .
     ├── .github/
     │   └── workflows/             # GitHub workflows
-    ├── terraform/                 # Terraform templates
-    │   ├── environments/          # Infrastructure environments
-    └── scripts/                   # Automation scripts
+    └── ...
 
 
 ------------------------------------------------------------------------
